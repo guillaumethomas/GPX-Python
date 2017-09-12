@@ -63,15 +63,15 @@ def address(coord):
     location = Nomi().reverse(coord)
     return location.address
 
-def average_per_hour(dpt):
-    if dpt[2][-1] < 3600:
+def average_per_hour(dpt, interval = 3600):
+    if dpt[2][-1] < interval:
         print('Activity is too short for an avg per hour GO ride more !')
         return [],[]
     else:
         data_point=[[dpt[1][0],dpt[2][0]]]
         hour_mult = 1
         for time in dpt[2]:
-            if time >= (hour_mult * 3600):
+            if time >= (hour_mult * interval):
                 b = dpt[2].index(time)
                 data_point.append([dpt[1][b],time])
                 hour_mult += 1
@@ -86,10 +86,11 @@ def average_per_hour(dpt):
             avg_speed_elem *= 3.6
             avg_speed_elem = round(avg_speed_elem,2)
             avg_speed.append(avg_speed_elem)
-        return data_point, avg_speed
+        return data_point, avg_speed, interval
 
-def print_avg(average_speed):
-    Table = PT(['Hour', 'Avg (km/h)'])
+def print_avg(average_speed, interval):
+    Time_Heading = str(interval / 3600) + ' Hours Segment'
+    Table = PT([Time_Heading, 'Avg (km/h)'])
     for avg in average_speed:
         Table.add_row([str(average_speed.index(avg)+1),str(round(avg,2))])
     return Table
@@ -107,9 +108,9 @@ def main():
             print('avg speed is', avg_speed, ' km/h')
             plt.title(file)
             plt.show()
-            data_point, average_speed = average_per_hour(dpt)
+            data_point, average_speed, interval = average_per_hour(dpt, 1800)
             if average_speed != []:
-                print(print_avg(average_speed))
+                print(print_avg(average_speed, interval))
 
 if __name__ == "__main__":
     main()
