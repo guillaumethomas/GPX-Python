@@ -81,13 +81,11 @@ def average_per_hour(dpt):
         data_point.reverse()
 
         avg_speed = list()
-        print(len(data_point))
         for i in range(len(data_point)-1):
             avg_speed_elem = (data_point[i][0] - data_point[i+1][0]) / (data_point[i][1] - data_point[i+1][1])
             avg_speed_elem *= 3.6
             avg_speed_elem = round(avg_speed_elem,2)
             avg_speed.append(avg_speed_elem)
-        print(len(data_point))
         return data_point, avg_speed
 
 def print_avg(average_speed):
