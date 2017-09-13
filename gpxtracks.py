@@ -46,7 +46,7 @@ def distime(lat_lon_ele_datetime): # the argument is a list of four lists : lati
 
     R = 6371000 # "mean" earth radius
 
-    for i in range(1,len(lat)-1):
+    for i in range(1,len(lat)):
         timedif=date_time[i]-date_time[0] # timedif is a datetime.timedelta, which is converted in a duration in seconds in the next line
         times.append(timedif.days*24*3600+timedif.seconds)
         a = projdist[i-1]
@@ -68,17 +68,17 @@ def average_per_hour(dpt, interval = 3600):
         print('Activity is too short for an avg per hour GO ride more !')
         return [],[]
     else:
-        data_point=[[dpt[1][0],dpt[2][0]]]
+        data_point=[[dpt[0][0],dpt[2][0]]]
         hour_mult = 1
         for time in dpt[2]:
             if time >= (hour_mult * interval):
                 b = dpt[2].index(time)
-                data_point.append([dpt[1][b],time])
+                data_point.append([dpt[0][b],time])
                 hour_mult += 1
 
-        data_point.append([dpt[1][-1],dpt[2][-1]])
+        data_point.append([dpt[0][-1],dpt[2][-1]])
 
-        data_point.reverse()
+#        data_point.reverse()
 
         avg_speed = list()
         for i in range(len(data_point)-1):
