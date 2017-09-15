@@ -136,7 +136,11 @@ def main():
             plt.show()
             data_point, average_speed, interval = average_per_hour(dpt, 1800)
             if average_speed != []:
-                print(print_avg(average_speed, interval))
+                Table = print_avg(average_speed, interval)
+                print(Table)
+                text_file = file[:-4] + '.txt'
+                with open(text_file, 'w') as w:
+                    w.write(str(Table))
 
 if __name__ == "__main__":
     main()
