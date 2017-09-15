@@ -33,8 +33,8 @@ def gpxread(FileName): # return the four lists : latitudes, longitudes and eleva
     
 def distime(lat_lon_ele_datetime): # the argument is a list of four lists : latitudes, longitudes, elevations, datetimes. Return a list of 3 lists : the distance, the projected distance (in an horizontal plane) and the elapsed time form the beginning of the track. Considering that the distance betwenn two consecutive trackpoints is generally extremely small compared to earth radius, the earth is considered to be flat between this two points.
 
-    lat = [elem*pi/180 for elem in lat_lon_ele_datetime[0]] # convert in radian
-    lon = [elem*pi/180 for elem in lat_lon_ele_datetime[1]] # convert in radian
+    lat = [elem*pi/180 for elem in lat_lon_ele_datetime[0]] # convert into radian
+    lon = [elem*pi/180 for elem in lat_lon_ele_datetime[1]] # convert into radian
 
     ele = lat_lon_ele_datetime[2] # list of elevations (meter)
 
@@ -46,8 +46,8 @@ def distime(lat_lon_ele_datetime): # the argument is a list of four lists : lati
 
     R = 6371000 # "mean" earth radius
 
-    for i in range(1,len(lat)-1):
-        timedif=date_time[i]-date_time[0] # timedif is a datetime.timedelta, which is converted in a duration in seconds in the next line
+    for i in range(1,len(lat)):
+        timedif=date_time[i]-date_time[0] # timedif is a datetime.timedelta, which is converted into a duration in seconds in the next line
         times.append(timedif.days*24*3600+timedif.seconds)
         a = projdist[i-1]
         a += R*((sin(lat[i])-sin(lat[i-1]))**2+(cos(lat[i])*cos(lon[i])-cos(lat[i-1])*cos(lon[i-1]))**2+(cos(lat[i])*sin(lon[i])-cos(lat[i-1])*sin(lon[i-1]))**2)**.5
@@ -59,6 +59,29 @@ def distime(lat_lon_ele_datetime): # the argument is a list of four lists : lati
 
     return [dist,projdist,times]
 
+def speed(dist,times): # calculate the list of the speed (km/h) between consecutive trackpoints
+    spd=[0]
+    for i in range(1,len(dist)):
+        s = (dist[i]-dist[i-1])/(times[i]-times[i-1])
+        s *= 3.6
+        spd.append(s)
+    return spd
+    
+def distimewithoutstop(dpt,speed,speedthreshold): #remove the points if the speed is inferior to speedthreshold and substract the pause time. dpt is a list of 3 lists : distance, projected distance and time, speed is the speeds list !
+    distwithoutstop = dpt[0]
+    projdistwithoutstop = dpt[1]
+    timewithoutstop = dpt[2]
+    k=1
+    for i in range(1,len(speed)):
+        if speed[i]<speedthreshold:
+            slowtime = timewithoutstop[k]-timewithoutstop[k-1]
+            for j in range(k,len(distwithoutstop)):            
+                timewithoutstop[j] -= slowtime  # substract the pause time from all the following times.
+            del(distwithoutstop[k], projdistwithoutstop[k], timewithoutstop[k]) 
+        else:
+            k +=1
+    return [distwithoutstop,projdistwithoutstop,timewithoutstop]
+
 def address(coord):
     location = Nomi().reverse(coord)
     return location.address
@@ -68,17 +91,17 @@ def average_per_hour(dpt, interval = 3600):
         print('Activity is too short for an avg per hour GO ride more !')
         return [],[]
     else:
-        data_point=[[dpt[1][0],dpt[2][0]]]
+        data_point=[[dpt[0][0],dpt[2][0]]]
         hour_mult = 1
         for time in dpt[2]:
             if time >= (hour_mult * interval):
                 b = dpt[2].index(time)
-                data_point.append([dpt[1][b],time])
+                data_point.append([dpt[0][b],time])
                 hour_mult += 1
 
-        data_point.append([dpt[1][-1],dpt[2][-1]])
+        data_point.append([dpt[0][-1],dpt[2][-1]])
 
-        data_point.reverse()
+#        data_point.reverse()
 
         avg_speed = list()
         for i in range(len(data_point)-1):
@@ -100,6 +123,9 @@ def main():
     for file in os.listdir():
         if file.endswith(".gpx"):
             dpt = distime(gpxread(file))
+            speeds=speed(dpt[0],dpt[2])
+            SPEEDTHRESHOLD = 2 # speed threshold in km/h
+            dpt = distimewithoutstop(dpt,speeds,SPEEDTHRESHOLD)
             plt.plot(dpt[2],dpt[0]) # distance (m) vs time (s)
             plt.plot(dpt[2],dpt[1]) # projected distance (m) vs time (s)
             print(file)
